@@ -3,7 +3,6 @@ package a3test;
 import a3.*;
 
 import static org.junit.Test.*;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
@@ -408,4 +407,159 @@ public class A3AdeptTests {
 		} catch (IllegalArgumentException e) {
 		}
 	}
+
+	@Test
+	public void testImmutablePixelArrayPicturePaintOnePixel() {
+		Pixel[][] parray = new Pixel[5][10];
+
+		for (int x=0; x<5; x++) {
+			for (int y=0; y<10; y++) {
+				parray[x][y] = red;
+			}
+		}
+
+		Picture p = new ImmutablePixelArrayPicture(parray);
+
+		Picture result = p.paint(0, 0, blue);
+		assertNotEquals(p, result);
+
+		Pixel pix00_orig = p.getPixel(0, 0);
+		Pixel pix00_res = result.getPixel(0, 0);
+
+		check_for_component_equality(red, pix00_orig);
+		check_for_component_equality(blue, pix00_res);
+
+		for (int x=0; x<5; x++) {
+			for (int y=0; y<10; y++) {
+				if (x != 0 && y !=0) {
+					check_for_component_equality(red, result.getPixel(x, y));
+				}
+			}
+		}		
+	}
+
+	@Test
+	public void testGradientPicturePaintOnePixel() {
+		Picture p = new GradientPicture(5, 10, red, blue, green, yellow);
+
+		Picture result = p.paint(0, 0, blue);
+		assertNotEquals(p, result);
+
+		Pixel pix00_orig = p.getPixel(0, 0);
+		Pixel pix00_res = result.getPixel(0, 0);
+
+		check_for_component_equality(red, pix00_orig);
+		check_for_component_equality(blue, pix00_res);
+
+		for (int x=0; x<5; x++) {
+			for (int y=0; y<10; y++) {
+				if (x != 0 && y !=0) {
+					check_for_component_equality(p.getPixel(x, y), result.getPixel(x, y));
+				}
+			}
+		}		
+	}
+
+
+	@Test
+	public void testHorizontalStackPicturePaintOnePixel() {
+		Picture left = new MonochromePicture(5, 5, red);
+		Picture right = new MonochromePicture(5, 5, blue);
+
+		Picture hstack = new HorizontalStackPicture(left, right);
+
+		Picture result = hstack.paint(0, 0, green);
+		assertEquals(hstack, result);
+		result = result.paint(5, 0, green);
+		assertEquals(hstack, result);
+
+		for (int x=0; x<10; x++) {
+			for (int y=0; y<5; y++) {
+				if ((x == 0 && y == 0) || (x == 5 && y == 0)) {
+					check_for_component_equality(green, hstack.getPixel(x, y));
+				} else {
+					if (x < 5) {
+						check_for_component_equality(red, hstack.getPixel(x, y));						
+					} else {
+						check_for_component_equality(blue, hstack.getPixel(x, y));						
+					}
+				}
+			}
+		}
+	}
+
+	@Test
+	public void testVerticalStackPicturePaintOnePixel() {
+		Picture top = new MonochromePicture(5, 5, red);
+		Picture bottom = new MonochromePicture(5, 5, blue);
+
+		Picture vstack = new VerticalStackPicture(top, bottom);
+
+		Picture result = vstack.paint(0, 0, green);
+		assertEquals(vstack, result);
+		result = result.paint(0, 5, green);
+		assertEquals(vstack, result);
+
+		for (int x=0; x<5; x++) {
+			for (int y=0; y<10; y++) {
+				if ((x == 0 && y == 0) || (x == 0 && y == 5)) {
+					check_for_component_equality(green, vstack.getPixel(x, y));
+				} else {
+					if (y < 5) {
+						check_for_component_equality(red, vstack.getPixel(x, y));						
+					} else {
+						check_for_component_equality(blue, vstack.getPixel(x, y));						
+					}
+				}
+			}
+		}
+	}
+
+	@Test
+	public void testGradientPicture() {
+		Picture gradient = new GradientPicture(5, 5, red, red, blue, blue);
+		Pixel g1 = red.blend(blue, 0.25);
+		Pixel g2 = red.blend(blue, 0.5);
+		Pixel g3 = red.blend(blue, 0.75);
+
+		check_for_component_equality(red, gradient.getPixel(2, 0));
+		check_for_component_equality(g1, gradient.getPixel(2, 1));
+		check_for_component_equality(g2, gradient.getPixel(2, 2));
+		check_for_component_equality(g3, gradient.getPixel(2, 3));
+		check_for_component_equality(blue, gradient.getPixel(2, 4));
+
+		gradient = new GradientPicture(5, 5, red, blue, red, blue);
+		check_for_component_equality(red, gradient.getPixel(0, 2));
+		check_for_component_equality(g1, gradient.getPixel(1, 2));
+		check_for_component_equality(g2, gradient.getPixel(2, 2));
+		check_for_component_equality(g3, gradient.getPixel(3, 2));
+		check_for_component_equality(blue, gradient.getPixel(4, 2));
+
+		gradient = new GradientPicture(5, 5, red, blue, yellow, green);
+		Pixel mid_row_start = red.blend(yellow, 0.5);
+		Pixel mid_row_end = blue.blend(green, 0.5);
+		Pixel mid_col_start = red.blend(blue, 0.5);
+		Pixel mid_col_end = yellow.blend(green, 0.5);
+		Pixel middle = mid_row_start.blend(mid_row_end, 0.5);
+		Pixel pix11 = red.blend(blue, 0.25).blend(yellow.blend(green, 0.25), 0.25);
+
+		check_for_component_equality(mid_row_start, gradient.getPixel(0, 2));
+		check_for_component_equality(mid_row_end, gradient.getPixel(4, 2));
+		check_for_component_equality(mid_col_start, gradient.getPixel(2, 0));
+		check_for_component_equality(mid_col_end, gradient.getPixel(2, 4));
+		check_for_component_equality(middle, gradient.getPixel(2, 2));
+		check_for_component_equality(pix11, gradient.getPixel(1, 1));		
+	}
+
+	private static boolean check_for_component_equality(Pixel a, Pixel b) {
+		assertEquals(a.getRed(), b.getRed(), 0.001);
+		assertEquals(a.getGreen(), b.getGreen(), 0.001);
+		assertEquals(a.getBlue(), b.getBlue(), 0.001);
+
+		return true;
+	}
+
+
+
+
 }

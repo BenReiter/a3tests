@@ -37,6 +37,7 @@ public class A3NoviceTests {
 	Picture red_BlueMutablePictureLargeWidth = new MutablePixelArrayPicture(542, 2, red_blue);
 	Picture rgbMutablePicture = new MutablePixelArrayPicture(rgbPicture);
 	Picture randomMutablePicture = new MutablePixelArrayPicture(randomPicture);
+
 	//Valid Grayscale Pixel Mutable Pixel Array 
 	Picture grayscalePicture = new MutablePixelArrayPicture(4, 5);
 	Picture grayscalePictureWeirdDimensions = new MutablePixelArrayPicture(10000, 3333);
@@ -286,7 +287,198 @@ public class A3NoviceTests {
 		evenBlueMonochromePicture.getPixel(evenBlueMonochromePicture.getWidth(), evenBlueMonochromePicture.getHeight());
 	}
 
+	@Test
+	public void testMutablePixelArrayPicturePaintOnePixel() {
+		Pixel[][] parray = new Pixel[5][10];
+		
+		for (int x=0; x<5; x++) {
+			for (int y=0; y<10; y++) {
+				parray[x][y] = red;
+			}
+		}
+		
+		Picture p = new MutablePixelArrayPicture(parray);
+		
+		Picture result = p.paint(0, 0, blue);
+		assertEquals(p, result);
+		
+		Pixel pix00 = p.getPixel(0, 0);
+		check_for_component_equality(blue, pix00);
 
+		for (int x=0; x<5; x++) {
+			for (int y=0; y<10; y++) {
+				if (x != 0 && y !=0) {
+					check_for_component_equality(red, p.getPixel(x, y));
+				}
+			}
+		}		
+	}
+	
+	@Test
+	public void testMonochromPicturePaintOnePixel() {
+		Picture p = new MonochromePicture(5, 10, red);
+		
+		Picture result = p.paint(0, 0, blue);
+		assertNotEquals(p, result);
+		
+		Pixel pix00_orig = p.getPixel(0, 0);
+		check_for_component_equality(red, pix00_orig);
+
+		Pixel pix00_res = result.getPixel(0, 0);
+		check_for_component_equality(blue, pix00_res);
+		
+		for (int x=0; x<5; x++) {
+			for (int y=0; y<10; y++) {
+				if (x != 0 && y !=0) {
+					check_for_component_equality(red, result.getPixel(x, y));
+				}
+			}
+		}		
+	}
+
+	
+	@Test
+	public void testMutablePixelArrayPicturePaintRectangle() {
+		Pixel[][] parray = new Pixel[5][10];
+		
+		for (int x=0; x<5; x++) {
+			for (int y=0; y<10; y++) {
+				parray[x][y] = red;
+			}
+		}
+		
+		Picture p = new MutablePixelArrayPicture(parray);
+		
+		Picture result = p.paint(1, 1, 3, 3, blue);
+		assertEquals(p, result);
+		
+		for (int x=0; x<5; x++) {
+			for (int y=0; y<10; y++) {
+				if (x >= 1 && x <=3 && y >= 1 && y <= 3) {
+					check_for_component_equality(blue, p.getPixel(x, y));
+				} else {
+					check_for_component_equality(red, p.getPixel(x, y));		
+				}
+			}
+		}		
+	}
+
+	@Test
+	public void testMonochromPicturePaintRectangle() {
+		Picture p = new MonochromePicture(5, 10, red);
+		
+		Picture result = p.paint(1, 1, 3, 3, blue);
+		assertNotEquals(p, result);
+
+		for (int x=0; x<5; x++) {
+			for (int y=0; y<10; y++) {
+				if (x >= 1 && x <=3 && y >= 1 && y <= 3) {
+					check_for_component_equality(blue, result.getPixel(x, y));
+				} else {
+					check_for_component_equality(red, result.getPixel(x, y));		
+				}
+			}
+		}		
+
+	}
+
+	@Test
+	public void testMutablePixelArrayPicturePaintCircle() {
+		Pixel[][] parray = new Pixel[5][10];
+		
+		for (int x=0; x<5; x++) {
+			for (int y=0; y<10; y++) {
+				parray[x][y] = red;
+			}
+		}
+		
+		Picture p = new MutablePixelArrayPicture(parray);
+		
+		Picture result = p.paint(2, 5, 2.5, blue);
+		assertEquals(p, result);
+		
+		for (int x=0; x<5; x++) {
+			for (int y=0; y<10; y++) {
+				if (Math.sqrt((x-2)*(x-2)+(y-5)*(y-5)) <= 2.5) {
+					check_for_component_equality(blue, p.getPixel(x, y));					
+				} else {
+					check_for_component_equality(red, p.getPixel(x, y));		
+				}
+			}
+		}		
+	}
+
+	@Test
+	public void testMonochromePicturePaintCircle() {
+		Picture p = new MonochromePicture(5, 10, red);
+		
+		Picture result = p.paint(2, 5, 2.5, blue);
+		assertNotEquals(p, result);
+		
+		for (int x=0; x<5; x++) {
+			for (int y=0; y<10; y++) {
+				if (Math.sqrt((x-2)*(x-2)+(y-5)*(y-5)) <= 2.5) {
+					check_for_component_equality(blue, result.getPixel(x, y));					
+				} else {
+					check_for_component_equality(red, result.getPixel(x, y));		
+				}
+			}
+		}		
+	}
+	
+	@Test
+	public void testPartialOverlapPaintRectangle() {
+		Pixel[][] parray = new Pixel[5][10];
+		
+		for (int x=0; x<5; x++) {
+			for (int y=0; y<10; y++) {
+				parray[x][y] = red;
+			}
+		}
+		
+		Picture p = new MutablePixelArrayPicture(parray);
+		
+		Picture result = p.paint(-1, -1, 1, 1, blue);
+		assertEquals(p, result);
+		
+		for (int x=0; x<5; x++) {
+			for (int y=0; y<10; y++) {
+				if (x >= -1 && x <=1 && y >= -1 && y <= 1) {
+					check_for_component_equality(blue, p.getPixel(x, y));
+				} else {
+					check_for_component_equality(red, p.getPixel(x, y));		
+				}
+			}
+		}		
+		
+	}
+
+	@Test
+	public void testPartialOverlapPaintCircle() {
+		Picture p = new MonochromePicture(5, 10, red);
+		
+		Picture result = p.paint(0, 0, 2.5, blue);
+		assertNotEquals(p, result);
+		
+		for (int x=0; x<5; x++) {
+			for (int y=0; y<10; y++) {
+				if (Math.sqrt(x*x+y*y) <= 2.5) {
+					check_for_component_equality(blue, result.getPixel(x, y));					
+				} else {
+					check_for_component_equality(red, result.getPixel(x, y));		
+				}
+			}
+		}		
+	}
+
+
+	private static boolean check_for_component_equality(Pixel a, Pixel b) {
+		assertEquals(a.getRed(), b.getRed(), 0.001);
+		assertEquals(a.getGreen(), b.getGreen(), 0.001);
+		assertEquals(a.getBlue(), b.getBlue(), 0.001);
+
+		return true;
+	}
 
 }
 
